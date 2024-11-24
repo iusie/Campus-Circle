@@ -5,14 +5,24 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.manager.RedisService;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.mapper.UserMapper;
-import com.iusie.campuscircle.model.vo.UserRegisterRequest;
+import com.iusie.campuscircle.model.request.UserRegisterRequest;
+import com.iusie.campuscircle.model.vo.UserVO;
 import com.iusie.campuscircle.service.UserService;
+import com.iusie.campuscircle.utils.JwtUtils;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -22,8 +32,15 @@ import java.util.regex.Pattern;
  * @createDate 2024-11-23 12:15:17
  */
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
+
+    @Resource
+    private UserMapper userMapper;
+
+    @Resource
+    private RedisService redisService;
 
 
     private static final String SALT = "iusie";
@@ -91,6 +108,65 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return user.getId();
     }
 
+    @Override
+    public UserVO userLogin(String userAccount, String userPassword, HttpServletResponse response) {
+        //账号，密码 不能为空
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "登录参数为空");
+        }
+        // 账号校验
+        if (userAccount.length() < 4) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "账号长度小于4");
+        }
+        //账号非法字符校验
+        String validPattern = "[\\u00A0\\s\"`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if (matcher.find()) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "账号非法");
+        }
+        //加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+
+        //账号查询
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        queryWrapper.eq("userPassword", encryptPassword);
+        User user = userMapper.selectOne(queryWrapper);
+
+        //用户不存在
+        if (user == null) {
+            log.info("user login failed,userAccount cannot match userPassword");
+            throw new BusinessException(StateCode.PARAMS_ERROR, "账号或者密码错误");
+        }
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        // 把用户信息写入Redis
+        redisService.UserInfoCache(userAccount, userVO);
+        // 生成Token保存到Redis中
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userAccount", userAccount);
+        // 生成token
+        String token = JwtUtils.genToken(claims);
+        // 把token保存到redis中
+        redisService.saveToken(userAccount, token);
+        // 将 Token 写入响应头
+        response.setHeader("Authorization", token);
+        return userVO;
+    }
+
+    @Override
+    public int userLogout(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        if (StringUtils.isBlank(token))
+        {
+            throw new BusinessException(StateCode.PARAMS_ERROR,"Token状态异常");
+        }
+        Map<String, Object> parsed = JwtUtils.parseToken(token);
+        String userAccount = (String) parsed.get("userAccount");
+        redisService.removeUserInfoCache(userAccount);
+        redisService.removeToken(userAccount);
+        return 1;
+    }
 
 }
 

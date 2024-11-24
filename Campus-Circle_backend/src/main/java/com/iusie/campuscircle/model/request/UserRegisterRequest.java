@@ -1,6 +1,9 @@
-package com.iusie.campuscircle.model.vo;
+package com.iusie.campuscircle.model.request;
 
 import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
 
 /**
  * @author iusie
@@ -8,7 +11,9 @@ import lombok.Data;
  * @date 2024/11/23
  */
 @Data
-public class UserRegisterRequest {
+public class UserRegisterRequest implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 6511513391726229090L;
     /**
      * 用户账号
      */

@@ -29,4 +29,15 @@ public interface UserConstant {
     String BAN_ROLE = "ban";
 
     // endregion
+
+    /**
+     * secretKey 密钥
+     */
+    String SECRET_KEY="qxT5SRJh8QQoHwbwhyyTvf+OVSfD/tWjG3Mbo9xiR80=";
+
+    /**
+     * tonken 过期时间
+     */
+    long EXPIRE_TIME=7200000;
+
 }
