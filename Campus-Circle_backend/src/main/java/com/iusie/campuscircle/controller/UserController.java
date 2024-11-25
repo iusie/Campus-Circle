@@ -4,6 +4,7 @@ import com.iusie.campuscircle.common.BaseResponse;
 import com.iusie.campuscircle.common.ResultUtils;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.request.UserLoginRequest;
 import com.iusie.campuscircle.model.request.UserRegisterRequest;
 import com.iusie.campuscircle.model.vo.UserVO;

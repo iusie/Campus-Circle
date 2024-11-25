@@ -25,40 +25,40 @@ public class RedisService {
     private final RedisTemplate<String, Object> redisService;
 
     // 保存token
-    public void saveToken(String userAccount ,String token) {
-        String tokenKey = "token:" + userAccount;
+    public void saveToken(Long userId ,String token) {
+        String tokenKey = "token:" + userId;
         ValueOperations<String,Object> operations = redisService.opsForValue();
         operations.set(tokenKey,token,EXPIRE_TIME, TimeUnit.SECONDS);
     }
 
     // 删除token
-    public boolean removeToken(String userAccount) {
-        String tokenKey = "token:" + userAccount;
+    public boolean removeToken(Long userId) {
+        String tokenKey = "token:" + userId;
         return redisService.delete(tokenKey) != null;
     }
 
     // 获取token
-    public String getToken(String userAccount) {
-        String tokenKey = "token:" + userAccount;  // 使用相同的键格式
+    public String getToken(Long userId) {
+        String tokenKey = "token:" + userId;  // 使用相同的键格式
         ValueOperations<String, Object> operations = redisService.opsForValue();
         return (String) operations.get(tokenKey);
     }
 
     // 进行登录用户信息缓存
-    public void UserInfoCache(String userAccount , UserVO userVO){
+    public void UserInfoCache(Long userId , UserVO userVO){
         String userCacheKey = "UserInfo:";
-        String userKey = "UserId:" + userAccount;
+        String userKey = "UserId:" + userId;
         HashOperations<String, String, Object> operations = redisService.opsForHash();
         operations.put(userCacheKey,userKey,userVO);
         redisService.expire(userCacheKey,EXPIRE_TIME,TimeUnit.SECONDS);
     }
 
     // 得到登录用户缓存信息
-    public UserVO getUserInfoCache(String userAccount) {
+    public UserVO getUserInfoCache(Long userId) {
         String userCacheKey = "UserInfo:";
-        String userKey = "UserId:" + userAccount;
+        String userKey = "UserId:" + userId;
         HashOperations<String, String, Object> operations = redisService.opsForHash();
-        if (userAccount == null)
+        if (userId == null)
         {
             throw new BusinessException(StateCode.PARAMS_ERROR,"用户缓存异常");
         }
@@ -66,11 +66,11 @@ public class RedisService {
     }
 
     // 删除用户缓存信息
-    public void removeUserInfoCache(String userAccount) {
+    public void removeUserInfoCache(Long userId) {
         String userCacheKey = "UserInfo:";
-        String userKey = "UserId:" + userAccount;
+        String userKey = "UserId:" + userId;
         HashOperations<String, String, Object> operations = redisService.opsForHash();
-        if (userAccount == null)
+        if (userId == null)
         {
             throw new BusinessException(StateCode.PARAMS_ERROR,"用户Id不存在");
         }

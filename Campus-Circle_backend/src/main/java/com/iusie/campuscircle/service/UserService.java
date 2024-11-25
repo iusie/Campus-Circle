@@ -39,4 +39,6 @@ public interface UserService extends IService<User> {
      * @return 1为退出成功
      */
     int userLogout(HttpServletRequest request);
+
+
 }

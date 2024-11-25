@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.iusie.campuscircle.constant.UserConstant.ADMIN_ROLE;
+
 /**
  * @author iusie
  * @description 针对表【user(用户)】的数据库操作Service实现
@@ -45,6 +47,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     private static final String SALT = "iusie";
 
+    /**
+     * 用户注册
+     *
+     * @param userRegisterRequest 注册信息实体
+     * @return 返回用户id
+     */
     @Override
     public long userRegister(UserRegisterRequest userRegisterRequest) {
         String userAccount = userRegisterRequest.getUserAccount();
@@ -108,6 +116,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return user.getId();
     }
 
+    /**
+     * 用户登录
+     *
+     * @param userAccount  账号
+     * @param userPassword 密码
+     * @param response     请求对象
+     * @return 用户信息
+     */
     @Override
     public UserVO userLogin(String userAccount, String userPassword, HttpServletResponse response) {
         //账号，密码 不能为空
@@ -140,33 +156,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
+        Long userId = userVO.getId();
         // 把用户信息写入Redis
-        redisService.UserInfoCache(userAccount, userVO);
+        redisService.UserInfoCache(userId, userVO);
         // 生成Token保存到Redis中
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userAccount", userAccount);
+        claims.put("userId", userId);
         // 生成token
         String token = JwtUtils.genToken(claims);
         // 把token保存到redis中
-        redisService.saveToken(userAccount, token);
+        redisService.saveToken(userId, token);
         // 将 Token 写入响应头
         response.setHeader("Authorization", token);
         return userVO;
     }
 
+    /**
+     * 用户注销
+     *
+     * @param request servlet对象
+     * @return 1为退出成功
+     */
     @Override
     public int userLogout(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
-        if (StringUtils.isBlank(token))
-        {
-            throw new BusinessException(StateCode.PARAMS_ERROR,"Token状态异常");
+        if (StringUtils.isBlank(token)) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "Token状态异常");
         }
         Map<String, Object> parsed = JwtUtils.parseToken(token);
-        String userAccount = (String) parsed.get("userAccount");
-        redisService.removeUserInfoCache(userAccount);
-        redisService.removeToken(userAccount);
+        Long userId = (Long) parsed.get("userId");
+        redisService.removeUserInfoCache(userId);
+        redisService.removeToken(userId);
         return 1;
     }
+
 
 }
 
