@@ -2,7 +2,7 @@ package com.iusie.campuscircle.manager;
 
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
-import com.iusie.campuscircle.model.vo.UserVO;
+import com.iusie.campuscircle.model.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -45,16 +45,16 @@ public class RedisService {
     }
 
     // 进行登录用户信息缓存
-    public void UserInfoCache(Long userId , UserVO userVO){
+    public void UserInfoCache(Long userId , User user){
         String userCacheKey = "UserInfo:";
         String userKey = "UserId:" + userId;
         HashOperations<String, String, Object> operations = redisService.opsForHash();
-        operations.put(userCacheKey,userKey,userVO);
+        operations.put(userCacheKey,userKey,user);
         redisService.expire(userCacheKey,EXPIRE_TIME,TimeUnit.SECONDS);
     }
 
     // 得到登录用户缓存信息
-    public UserVO getUserInfoCache(Long userId) {
+    public User getUserInfoCache(Long userId) {
         String userCacheKey = "UserInfo:";
         String userKey = "UserId:" + userId;
         HashOperations<String, String, Object> operations = redisService.opsForHash();
@@ -62,7 +62,7 @@ public class RedisService {
         {
             throw new BusinessException(StateCode.PARAMS_ERROR,"用户缓存异常");
         }
-        return (UserVO) operations.get(userCacheKey, userKey);
+        return (User) operations.get(userCacheKey, userKey);
     }
 
     // 删除用户缓存信息

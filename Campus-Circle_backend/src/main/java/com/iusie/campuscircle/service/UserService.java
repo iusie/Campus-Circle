@@ -2,6 +2,7 @@ package com.iusie.campuscircle.service;
 
 import com.iusie.campuscircle.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.iusie.campuscircle.model.request.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.UserRegisterRequest;
 import com.iusie.campuscircle.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,4 +42,28 @@ public interface UserService extends IService<User> {
     int userLogout(HttpServletRequest request);
 
 
+    /**
+     * 获取当前登录用户信息
+     *
+     * @param request
+     * @return
+     */
+    User getLoggingUser(HttpServletRequest request);
+
+    /**
+     * 是否为管理员
+     *
+     * @param request
+     * @return
+     */
+    boolean isAdmin(HttpServletRequest request);
+    boolean isAdmin(User user);
+
+    /**
+     * 更新用户信息(同时更新缓存)
+     * @param updateUserRequest 前端返回的数据
+     * @param request
+     * @return 1为更新成功，0为失败
+     */
+    boolean updateUser(UpdateUserRequest updateUserRequest, HttpServletRequest request);
 }

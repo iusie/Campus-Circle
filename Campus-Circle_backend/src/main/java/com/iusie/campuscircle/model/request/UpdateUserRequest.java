@@ -1,31 +1,35 @@
-package com.iusie.campuscircle.model.vo;
+package com.iusie.campuscircle.model.request;
 
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author iusie
  * @description
- * @date 2024/11/24
+ * @date 2024/11/25
  */
 @Data
-public class UserVO implements Serializable {
+public class UpdateUserRequest  implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = -7665120867988620229L;
+    private static final long serialVersionUID = 8541538311214997955L;
+
     /**
      * 用户id
      */
     private Long id;
 
     /**
-     * 用户账号
+     * 密码
      */
-    private String userAccount;
+    private String userPassword;
+
+    /**
+     * 确认密码
+     */
+    private String surePassword;
 
     /**
      * 用户昵称
@@ -60,7 +64,7 @@ public class UserVO implements Serializable {
     /**
      * 标签 json 列表
      */
-    private List<String> tags;
+    private String tags;
 
     /**
      * 用户角色 0 - 普通用户 1 - 管理员
@@ -71,10 +75,5 @@ public class UserVO implements Serializable {
      * 状态 0 - 正常
      */
     private Integer userStatus;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
 
 }

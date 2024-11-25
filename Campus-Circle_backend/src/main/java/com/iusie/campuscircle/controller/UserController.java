@@ -5,6 +5,7 @@ import com.iusie.campuscircle.common.ResultUtils;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
 import com.iusie.campuscircle.model.entity.User;
+import com.iusie.campuscircle.model.request.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.UserLoginRequest;
 import com.iusie.campuscircle.model.request.UserRegisterRequest;
 import com.iusie.campuscircle.model.vo.UserVO;
@@ -69,5 +70,17 @@ public class UserController {
         int logout = userService.userLogout(request);
         return ResultUtils.success(logout);
     }
+
+    @Operation(summary = "修改用户信息")
+    @PostMapping("/update")
+    public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserRequest updateUserRequest, HttpServletRequest request) {
+        if (updateUserRequest == null) {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        boolean result = userService.updateUser(updateUserRequest, request);
+        return ResultUtils.success(result);
+    }
+
+
 
 }

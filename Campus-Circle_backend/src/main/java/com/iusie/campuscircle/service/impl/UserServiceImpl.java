@@ -8,6 +8,7 @@ import com.iusie.campuscircle.exception.BusinessException;
 import com.iusie.campuscircle.manager.RedisService;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.mapper.UserMapper;
+import com.iusie.campuscircle.model.request.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.UserRegisterRequest;
 import com.iusie.campuscircle.model.vo.UserVO;
 import com.iusie.campuscircle.service.UserService;
@@ -158,7 +159,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         BeanUtils.copyProperties(user, userVO);
         Long userId = userVO.getId();
         // 把用户信息写入Redis
-        redisService.UserInfoCache(userId, userVO);
+        redisService.UserInfoCache(userId, user);
         // 生成Token保存到Redis中
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
@@ -188,6 +189,124 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         redisService.removeUserInfoCache(userId);
         redisService.removeToken(userId);
         return 1;
+    }
+
+    /**
+     * 获取当前登录用户信息
+     *
+     * @param request servlet对象
+     * @return UserVO
+     */
+    @Override
+    public User getLoggingUser(HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+        Map<String, Object> parsed = JwtUtils.parseToken(token);
+        Long userId = (Long) parsed.get("userId");
+        User cache = redisService.getUserInfoCache(userId);
+        if (cache != null) {
+            return cache;
+        }
+        // 如果缓存不存在，读数据库
+        // todo 读数据库除了Redis异常，还有可能是账号异常
+        log.info("账号存在异常,请尽快修改密码");
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        return userMapper.selectById(queryWrapper);
+    }
+
+    /**
+     * 查询是否为管理员
+     *
+     * @param request 请求头封装信息
+     * @return
+     */
+    @Override
+    public boolean isAdmin(HttpServletRequest request) {
+        try {
+            String token = request.getHeader("Authorization");
+            Map<String, Object> parsed = JwtUtils.parseToken(token);
+            Long userId = (Long) parsed.get("userId");
+            User cache = redisService.getUserInfoCache(userId);
+            return cache.getUserRole() == ADMIN_ROLE;
+        } catch (Exception e) {
+            throw new BusinessException(StateCode.NOT_FOUND_ERROR, "Redis或账号异常");
+        }
+    }
+
+    @Override
+    public boolean isAdmin(User loginUser) {
+        if (loginUser == null) {
+            return false;
+        }
+        return loginUser.getUserRole() == ADMIN_ROLE;
+    }
+
+    /**
+     * 更新用户信息(同时更新缓存)
+     *
+     * @param updateUserRequest 返回的数据
+     * @param request
+     * @return 1为更新成功，0为失败
+     */
+    @Override
+    public boolean updateUser(UpdateUserRequest updateUserRequest, HttpServletRequest request) {
+        long userId = updateUserRequest.getId();
+        User loginUser = this.getLoggingUser(request);
+        if (userId <= 0) {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        //如果是管理员可以改任何人的信息
+        //本人可以改自己的信息
+        if (!isAdmin(loginUser) && loginUser.getId() != userId) {
+            throw new BusinessException(StateCode.NO_AUTH_ERROR, "无权限");
+        }
+        User oldUser = userMapper.selectById(userId);
+        if (oldUser == null) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "参数为空");
+        }
+        //如果更新密码,非管理员需要校验两次密码是否相等
+        String newPassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getUserPassword()).getBytes());
+        String surePassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getSurePassword()).getBytes());
+        if (!oldUser.getUserPassword().equals(newPassword) && !isAdmin(loginUser) && !newPassword.equals(surePassword)) {
+            throw new BusinessException(StateCode.OPERATION_ERROR, "修改的两次密码不一致");
+        }
+        if (!oldUser.getUserPassword().equals(newPassword)) {
+            redisService.removeToken(userId);
+        }
+        updateUserRequest.setUserPassword(newPassword);
+        User user = new User();
+        BeanUtils.copyProperties(updateUserRequest, user);
+        //0为男，1为女
+        Integer gender = user.getGender();
+        if (gender != null) {
+            if (gender != 1 && gender != 0) {
+                return false;
+            }
+        }
+        if (user.getUsername().length() > 20) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "用户名过长");
+        }
+        String Phone = user.getPhone();
+        if (StringUtils.isNotBlank(Phone) && !Validator.isMobile(Phone)) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "手机号格式错误");
+        }
+        String Email = user.getEmail();
+        if (StringUtils.isNotBlank(Email) && !Validator.isMobile(Email)) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "邮箱号格式错误");
+        }
+        //过滤普通用户不能更改的字段
+        if (!isAdmin(loginUser)) {
+            user.setUserStatus(0);
+            user.setUserRole(0);
+            user.setIsDelete(0);
+        }
+        int updateById = userMapper.updateById(user);
+        if (updateById != 1) {
+            return false;
+        }
+        //更新缓存信息
+        redisService.UserInfoCache(userId, user);
+
+        return true;
     }
 
 
