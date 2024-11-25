@@ -1,6 +1,7 @@
 package com.iusie.campuscircle.service.impl;
 
 import cn.hutool.core.lang.Validator;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iusie.campuscircle.common.StateCode;
@@ -17,13 +18,13 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -308,6 +309,105 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         return true;
     }
+
+    /**
+     * 根据用户ID获取用户信息
+     *
+     * @param queryById   查询条件对象，包含要查询的用户ID
+     * @param loggingUser 当前登录用户，用于权限判断等
+     * @return 查询到的用户信息对象
+     */
+    @Override
+    public User getUserInfoById(Long queryById, User loggingUser) {
+        User userInfoCache = redisService.getUserInfoCache(queryById);
+        if (ObjectUtils.isNotEmpty(userInfoCache)) {
+            return handleUserInfoBasedOnRole(loggingUser, userInfoCache);
+        }
+        // 无缓存，读MySQL数据库
+        User user = userMapper.selectById(queryById);
+        if (ObjectUtils.isNotEmpty(user)) {
+            // 缓存写入（这里添加合适的异常处理逻辑会更好，比如写入失败的情况等）
+            try {
+                redisService.UserInfoCache(queryById, user);
+            } catch (Exception e) {
+                throw new BusinessException(StateCode.NOT_FOUND_ERROR, "返回用户为空");
+            }
+            return handleUserInfoBasedOnRole(loggingUser, user);
+        }
+        return user;
+    }
+
+    /**
+     * 用户搜索
+     *
+     * @param userAccount 搜索实体
+     * @param loggingUser 返回的用户数据
+     * @return List<User>
+     */
+    @Override
+    public List<UserVO> searchUsers(String userAccount, String userName, User loggingUser) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+
+        // 处理 userAccount 精确搜索
+        if (StringUtils.isNotBlank(userAccount)) {
+            queryWrapper.eq("userAccount", userAccount);
+        }
+        // 处理 userName 模糊搜索
+        else if (StringUtils.isNotBlank(userName)) {
+            queryWrapper.like("username", userName);
+            queryWrapper.last("LIMIT 100"); // 限制返回结果数量
+        } else {
+            throw new BusinessException(StateCode.PARAMS_ERROR,"请输入参数");
+        }
+
+        // 执行查询
+        List<User> users = this.list(queryWrapper);
+
+        // 数据脱敏
+        List<UserVO> userVOList = new ArrayList<>();
+        for (User user : users) {
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
+            userVOList.add(userVO);
+        }
+        return userVOList;
+    }
+
+    /**
+     * 分页获取用户列表（仅管理员）
+     *
+     * @return Wrapper<User>
+     */
+    @Override
+    public Wrapper<User> getQueryWrapper() {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        // 按 UserId 降序排列
+        queryWrapper.orderByDesc("id");
+
+        return queryWrapper;
+    }
+
+    /**
+     * 根据登录用户角色处理用户信息返回
+     *
+     * @param loggingUser 当前登录用户
+     * @param user        要处理的用户信息对象（可能来自缓存或者数据库查询）
+     * @return 最终要返回的符合业务逻辑的用户信息对象
+     */
+    private User handleUserInfoBasedOnRole(User loggingUser, User user) {
+        if (isAdmin(loggingUser)) {
+            return user;
+        }
+
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+
+        User resultUser = new User();
+        BeanUtils.copyProperties(userVO, resultUser);
+
+        return resultUser;
+    }
+
 
 
 }

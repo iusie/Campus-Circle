@@ -1,9 +1,11 @@
 package com.iusie.campuscircle.model.request;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author iusie
@@ -20,6 +22,11 @@ public class UpdateUserRequest  implements Serializable {
      * 用户id
      */
     private Long id;
+
+    /**
+     * 用户账号
+     */
+    private String userAccount;
 
     /**
      * 密码
@@ -75,5 +82,16 @@ public class UpdateUserRequest  implements Serializable {
      * 状态 0 - 正常
      */
     private Integer userStatus;
+
+
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
 
 }

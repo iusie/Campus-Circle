@@ -1,5 +1,6 @@
 package com.iusie.campuscircle.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.iusie.campuscircle.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.iusie.campuscircle.model.request.UpdateUserRequest;
@@ -7,6 +8,8 @@ import com.iusie.campuscircle.model.request.UserRegisterRequest;
 import com.iusie.campuscircle.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import java.util.List;
 
 /**
 * @author iusie
@@ -66,4 +69,29 @@ public interface UserService extends IService<User> {
      * @return 1为更新成功，0为失败
      */
     boolean updateUser(UpdateUserRequest updateUserRequest, HttpServletRequest request);
+
+    /**
+     * 查看用户信息
+     *
+     * @param queryById id实体
+     * @param loggingUser 返回的用户数据
+     * @return User
+     */
+    User getUserInfoById(Long queryById, User loggingUser);
+
+    /**
+     * 用户搜索
+     *
+     * @param userAccount 搜索实体
+     * @param loggingUser 返回的用户数据
+     * @return List<User>
+     */
+    List<UserVO> searchUsers(String userAccount , String userName,  User loggingUser);
+
+    /**
+     * 分页获取用户列表（仅管理员）
+     *
+     * @return Wrapper<User>
+     */
+    Wrapper<User> getQueryWrapper();
 }

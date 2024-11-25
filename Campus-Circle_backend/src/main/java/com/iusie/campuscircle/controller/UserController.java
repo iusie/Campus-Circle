@@ -1,8 +1,7 @@
 package com.iusie.campuscircle.controller;
 
-import com.iusie.campuscircle.common.BaseResponse;
-import com.iusie.campuscircle.common.ResultUtils;
-import com.iusie.campuscircle.common.StateCode;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.iusie.campuscircle.common.*;
 import com.iusie.campuscircle.exception.BusinessException;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.request.UpdateUserRequest;
@@ -17,10 +16,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author iusie
@@ -72,7 +70,7 @@ public class UserController {
     }
 
     @Operation(summary = "修改用户信息")
-    @PostMapping("/update")
+    @PutMapping("/update")
     public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserRequest updateUserRequest, HttpServletRequest request) {
         if (updateUserRequest == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
@@ -81,6 +79,59 @@ public class UserController {
         return ResultUtils.success(result);
     }
 
+    @Operation(summary = "获取单个用户信息")
+    @GetMapping("/getUserInfo")
+    public BaseResponse<User> getUserInfo(@RequestParam Long id, HttpServletRequest request)
+    {
+        if (id == null)
+        {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        User loggingUser = userService.getLoggingUser(request);
+        User result = userService.getUserInfoById(id,loggingUser);
+        return ResultUtils.success(result);
+    }
 
+
+    @Operation(summary = "查询用户")
+    @GetMapping("/searchUsers")
+    public BaseResponse<List<UserVO>> searchUsers(String userAccount , String userName, HttpServletRequest request)
+    {
+        if (userAccount == null && userName == null)
+        {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        User loggingUser = userService.getLoggingUser(request);
+        List<UserVO> userList = userService.searchUsers(userAccount,userName,loggingUser);
+        return ResultUtils.success(userList);
+    }
+
+    @Operation(summary = "用户列表(管理员)")
+    @PostMapping("/usersList")
+    public BaseResponse<Page<User>> usersList(@RequestBody PageRequest pageRequest, HttpServletRequest request)
+    {
+        long current = pageRequest.getCurrent();
+        long size = pageRequest.getPageSize();
+        if (!userService.isAdmin(request))
+        {
+            throw new BusinessException(StateCode.NO_AUTH_ERROR);
+        }
+        Page<User> userPage = userService.page(new Page<>(current, size),userService.getQueryWrapper());
+        return ResultUtils.success(userPage);
+    }
+
+    @Operation(summary = "删除用户")
+    @PostMapping("/delete")
+    public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        if (!userService.isAdmin(request))
+        {
+            throw new BusinessException(StateCode.NO_AUTH_ERROR);
+        }
+        boolean delete = userService.removeById(deleteRequest.getId());
+        return ResultUtils.success(delete);
+    }
 
 }
