@@ -1,6 +1,5 @@
 package com.iusie.campuscircle.model.request;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 import java.io.Serial;

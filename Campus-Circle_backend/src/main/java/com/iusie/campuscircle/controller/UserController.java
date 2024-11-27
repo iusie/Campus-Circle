@@ -1,6 +1,7 @@
 package com.iusie.campuscircle.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.iusie.campuscircle.annotation.OperationLogger;
 import com.iusie.campuscircle.common.*;
 import com.iusie.campuscircle.exception.BusinessException;
 import com.iusie.campuscircle.model.entity.User;
@@ -60,6 +61,7 @@ public class UserController {
     }
 
     @Operation(summary = "用户退出")
+    @OperationLogger("用户退出")
     @PostMapping("/logout")
     public BaseResponse<Integer> userLogout(HttpServletRequest request) {
         if (request == null) {
@@ -70,6 +72,7 @@ public class UserController {
     }
 
     @Operation(summary = "修改用户信息")
+    @OperationLogger("修改用户信息")
     @PutMapping("/update")
     public BaseResponse<Boolean> updateUser(@RequestBody UpdateUserRequest updateUserRequest, HttpServletRequest request) {
         if (updateUserRequest == null) {
@@ -80,6 +83,7 @@ public class UserController {
     }
 
     @Operation(summary = "获取单个用户信息")
+    @OperationLogger("获取单个用户信息")
     @GetMapping("/getUserInfo")
     public BaseResponse<User> getUserInfo(@RequestParam Long id, HttpServletRequest request)
     {
@@ -94,6 +98,7 @@ public class UserController {
 
 
     @Operation(summary = "查询用户")
+    @OperationLogger("查询用户")
     @GetMapping("/searchUsers")
     public BaseResponse<List<UserVO>> searchUsers(String userAccount , String userName, HttpServletRequest request)
     {
@@ -107,6 +112,7 @@ public class UserController {
     }
 
     @Operation(summary = "用户列表(管理员)")
+    @OperationLogger("查询用户列表")
     @PostMapping("/usersList")
     public BaseResponse<Page<User>> usersList(@RequestBody PageRequest pageRequest, HttpServletRequest request)
     {
@@ -121,6 +127,7 @@ public class UserController {
     }
 
     @Operation(summary = "删除用户")
+    @OperationLogger("删除用户")
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteUser(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {

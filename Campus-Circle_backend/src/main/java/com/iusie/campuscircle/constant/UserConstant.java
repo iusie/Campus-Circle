@@ -13,15 +13,21 @@ public interface UserConstant {
      */
     int DEFAULT_ROLE = 0;
 
+    String DEFAULT = "普通用户";
+
     /**
      * 管理员角色
      */
     int ADMIN_ROLE = 1;
 
+    String ADMIN = "管理员";
+
     /**
      * 被封号
      */
     int BAN_ROLE = 2;
+
+    String BAN = "黑名单用户";
 
     // endregion
 
