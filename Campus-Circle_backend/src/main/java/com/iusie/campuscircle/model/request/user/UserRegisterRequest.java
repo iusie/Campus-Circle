@@ -1,4 +1,4 @@
-package com.iusie.campuscircle.model.request;
+package com.iusie.campuscircle.model.request.user;
 
 import lombok.Data;
 

@@ -1,26 +1,22 @@
-package com.iusie.campuscircle.model.entity;
+package com.iusie.campuscircle.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
 
+import java.io.Serializable;
+import java.util.Date;
+import java.util.List;
+
 /**
- * 队伍持久化数据实体
- *
- * @TableName team
  * @author iusie
- * @date 2024/11/27
+ * @description
+ * @date 2024/11/28
  */
-@TableName(value ="team")
 @Data
-public class Team implements Serializable {
+public class TeamVO implements Serializable {
+
     /**
      * 队伍id
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -29,15 +25,14 @@ public class Team implements Serializable {
     private Long userId;
 
     /**
-     * 队伍名称
-     */
-    private String teamName;
-
-
-    /**
      * 队伍头像
      */
     private String avatarTeam;
+
+    /**
+     * 队伍名称
+     */
+    private String teamName;
 
     /**
      * 队伍描述
@@ -48,11 +43,6 @@ public class Team implements Serializable {
      * 最大人数
      */
     private Integer maxNum;
-
-    /**
-     * 队伍密码
-     */
-    private String teamPassword;
 
     /**
      * 状态 0-正常 1-私有  2-加密
@@ -75,12 +65,16 @@ public class Team implements Serializable {
     private Date updateTime;
 
     /**
-     * 是否删除
+     * 创建人用户信息
      */
-    @TableLogic
-    private Integer isDelete;
+    private UserVO createUser;
+    /**
+     * 队伍加入的人数
+     */
+    private Integer hasJoinNum;
+    /**
+     * 加入队伍的用户信息
+     */
+    private List<UserVO> userJoinList;
 
-    @Serial
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }

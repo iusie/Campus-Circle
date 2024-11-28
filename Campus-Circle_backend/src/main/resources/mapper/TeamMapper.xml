@@ -7,6 +7,7 @@
     <resultMap id="BaseResultMap" type="com.iusie.campuscircle.model.entity.Team">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="avatarTeam" column="avatarTeam" jdbcType="VARCHAR"/>
             <result property="teamName" column="teamName" jdbcType="VARCHAR"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="maxNum" column="maxNum" jdbcType="INTEGER"/>

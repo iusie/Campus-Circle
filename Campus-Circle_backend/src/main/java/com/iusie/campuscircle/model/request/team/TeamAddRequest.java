@@ -1,28 +1,21 @@
-package com.iusie.campuscircle.model.entity;
+package com.iusie.campuscircle.model.request.team;
 
-import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
 
 /**
- * 队伍持久化数据实体
- *
- * @TableName team
  * @author iusie
+ * @description
  * @date 2024/11/27
  */
-@TableName(value ="team")
 @Data
-public class Team implements Serializable {
-    /**
-     * 队伍id
-     */
-    @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+public class TeamAddRequest implements Serializable {
 
+    @Serial
+    private static final long serialVersionUID = -8911934716308167050L;
     /**
      * 用户id
      */
@@ -32,7 +25,6 @@ public class Team implements Serializable {
      * 队伍名称
      */
     private String teamName;
-
 
     /**
      * 队伍头像
@@ -64,23 +56,5 @@ public class Team implements Serializable {
      */
     private Date expireTime;
 
-    /**
-     * 创建时间
-     */
-    private Date createTime;
 
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
-
-    /**
-     * 是否删除
-     */
-    @TableLogic
-    private Integer isDelete;
-
-    @Serial
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }
