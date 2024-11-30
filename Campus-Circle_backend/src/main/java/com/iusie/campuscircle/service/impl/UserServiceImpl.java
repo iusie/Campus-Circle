@@ -1,6 +1,7 @@
 package com.iusie.campuscircle.service.impl;
 
 import cn.hutool.core.lang.Validator;
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -60,10 +61,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        String userName = userRegisterRequest.getUsername();
-        String Phone = userRegisterRequest.getPhone();
         String Email = userRegisterRequest.getEmail();
-        int Gender = userRegisterRequest.getGender();
         //账号，密码 不能为空
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "账号或密码为空");
@@ -85,13 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (matcher.find()) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "账号含非法字符");
         }
-        if (userName.length() > 20) {
-            throw new BusinessException(StateCode.PARAMS_ERROR, "用户名过长");
-        }
-        if (StringUtils.isNotBlank(Phone) && !Validator.isMobile(Phone)) {
-            throw new BusinessException(StateCode.PARAMS_ERROR, "手机号格式错误");
-        }
-        if (StringUtils.isNotBlank(Email) && !Validator.isMobile(Email)) {
+        if (StringUtils.isNotBlank(Email) && !Validator.isEmail(Email)) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "邮箱号格式错误");
         }
         //账号不能重复
@@ -103,13 +95,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         //加密
         String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        String userName = RandomUtil.randomString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 6);
         //插入数据
         User user = new User();
+        user.setAvatarUrl("https://jsd.onmicrosoft.cn/gh/iusie/image/user.svg");
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        user.setUsername(userName);
-        user.setGender(Gender);
-        user.setPhone(Phone);
+        user.setUsername("用户_" + userName);
         user.setEmail(Email);
         boolean saveResult = this.save(user);
         if (!saveResult) {
