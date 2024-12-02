@@ -38,10 +38,10 @@
         </el-button>
 
         <el-dropdown class="avatar" @command="handleDropdownCommand">
-          <el-avatar :src="avatarSrc" @click="handleAvatarClick" />
+          <el-avatar :src="user?.avatarUrl || 'https://jsd.onmicrosoft.cn/gh/iusie/image/user.svg'" @click="handleAvatarClick" />
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="personalInfo">个人中心</el-dropdown-item>
+              <el-dropdown-item command="userInfo">个人中心</el-dropdown-item>
               <el-dropdown-item command="articleManager">文章管理</el-dropdown-item>
               <el-dropdown-item command="teamManager">队伍管理</el-dropdown-item>
               <el-dropdown-item command="setUp">设置</el-dropdown-item>
@@ -58,14 +58,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/counter';
-import LoginRegisterComponent from '@/components/LoginRegisterComponent.vue'; // 替换为你的组件路径
+import LoginRegisterComponent from '@/components/LoginRegisterComponent.vue';
+import { getUserInfo } from '@/service/axios/user'
+import type { UserLoginRes } from '@/model/UserVO' // 替换为你的组件路径
 
 const router = useRouter();
 const userStore = useUserStore();
-const avatarSrc = ref('https://jsd.onmicrosoft.cn/gh/iusie/image/unnamed.jpg');
 const search = ref('');
 const showLoginRegister = ref(false);
 
@@ -80,6 +81,25 @@ const handleAvatarClick = () => {
   }
 };
 
+const userId = userStore.userId;
+const user = ref<UserLoginRes | null>(null)
+
+onMounted(async () => {
+  if (userId === null) {
+    console.error('用户ID为空，无法获取用户信息');
+    return;
+  }
+
+  try {
+    const response = await getUserInfo(userId.toString());
+    user.value = response?.data?.data;
+  } catch (error) {
+    console.error('获取用户信息失败:', error);
+  }
+});
+
+
+
 const handleDropdownCommand = (command: string) => {
   if (!loginUerId.value) {
     showLoginRegister.value = true; // 显示登录注册组件
@@ -87,8 +107,8 @@ const handleDropdownCommand = (command: string) => {
   }
 
   switch (command) {
-    case 'personalInfo':
-      router.push('/personalInfo');
+    case 'userInfo':
+      router.push('/userInfo/personInfo');
       break;
     case 'articleManager':
       router.push('/articleManager');
@@ -100,7 +120,12 @@ const handleDropdownCommand = (command: string) => {
       router.push('/setUp');
       break;
     case 'logout':
-      router.push('/login');
+      userStore.clearUser();
+      if (router.currentRoute.value.path === '/') {
+        window.location.reload(); // 刷新页面
+      } else {
+        router.push('/');
+      }
       break;
   }
 };

@@ -1,10 +1,12 @@
 package com.iusie.campuscircle.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.iusie.campuscircle.model.request.user.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.user.UserRegisterRequest;
+import com.iusie.campuscircle.model.vo.LoginResponse;
 import com.iusie.campuscircle.model.vo.UserVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -34,7 +36,7 @@ public interface UserService extends IService<User> {
      * @param response 请求对象
      * @return 用户信息
      */
-    UserVO userLogin(String userAccount, String userPassword, HttpServletResponse response);
+    LoginResponse userLogin(String userAccount, String userPassword, HttpServletResponse response);
 
     /**
      * 用户注销
@@ -51,7 +53,7 @@ public interface UserService extends IService<User> {
      * @param request
      * @return
      */
-    User getLoggingUser(HttpServletRequest request);
+    UserDO getLoggingUser(HttpServletRequest request);
 
     /**
      * 是否为管理员
@@ -60,7 +62,7 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean isAdmin(HttpServletRequest request);
-    boolean isAdmin(User user);
+    boolean isAdmin(UserDO user);
 
     /**
      * 更新用户信息(同时更新缓存)
@@ -77,7 +79,7 @@ public interface UserService extends IService<User> {
      * @param loggingUser 返回的用户数据
      * @return User
      */
-    User getUserInfoById(Long queryById, User loggingUser);
+    UserDO getUserInfoById(Long queryById, UserDO loggingUser);
 
     /**
      * 用户搜索
@@ -86,7 +88,7 @@ public interface UserService extends IService<User> {
      * @param loggingUser 返回的用户数据
      * @return List<User>
      */
-    List<UserVO> searchUsers(String userAccount , String userName,  User loggingUser);
+    List<UserVO> searchUsers(String userAccount , String userName,  UserDO loggingUser);
 
     /**
      * 分页获取用户列表（仅管理员）

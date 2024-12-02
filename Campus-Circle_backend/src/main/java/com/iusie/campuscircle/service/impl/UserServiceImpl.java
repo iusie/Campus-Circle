@@ -8,10 +8,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
 import com.iusie.campuscircle.manager.RedisService;
+import com.iusie.campuscircle.model.converter.UserConverter;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.mapper.UserMapper;
 import com.iusie.campuscircle.model.request.user.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.user.UserRegisterRequest;
+import com.iusie.campuscircle.model.vo.LoginResponse;
 import com.iusie.campuscircle.model.vo.UserVO;
 import com.iusie.campuscircle.service.UserService;
 import com.iusie.campuscircle.utils.JwtUtils;
@@ -103,6 +106,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserPassword(encryptPassword);
         user.setUsername("用户_" + userName);
         user.setEmail(Email);
+        user.setTags("[]");
         boolean saveResult = this.save(user);
         if (!saveResult) {
             throw new BusinessException(StateCode.SYSTEM_ERROR, "数据插入错误");
@@ -119,7 +123,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 用户信息
      */
     @Override
-    public UserVO userLogin(String userAccount, String userPassword, HttpServletResponse response) {
+    public LoginResponse userLogin(String userAccount, String userPassword, HttpServletResponse response) {
         //账号，密码 不能为空
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "登录参数为空");
@@ -142,17 +146,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("userAccount", userAccount);
         queryWrapper.eq("userPassword", encryptPassword);
         User user = userMapper.selectOne(queryWrapper);
-
         //用户不存在
         if (user == null) {
             log.info("user login failed,userAccount cannot match userPassword");
             throw new BusinessException(StateCode.PARAMS_ERROR, "账号或者密码错误");
         }
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        Long userId = userVO.getId();
+        UserDO userDO = UserConverter.convertToUserDO(user);
+        LoginResponse loginResponse = new LoginResponse();
+        BeanUtils.copyProperties(userDO, loginResponse);
+        Long userId = loginResponse.getId();
+
         // 把用户信息写入Redis
-        redisService.UserInfoCache(userId, user);
+        redisService.UserInfoCache(userId, userDO);
         // 生成Token保存到Redis中
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
@@ -162,7 +167,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         redisService.saveToken(userId, token);
         // 将 Token 写入响应头
         response.setHeader("Authorization", token);
-        return userVO;
+        loginResponse.setToken(token);
+        return loginResponse;
     }
 
     /**
@@ -191,11 +197,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return UserVO
      */
     @Override
-    public User getLoggingUser(HttpServletRequest request) {
+    public UserDO getLoggingUser(HttpServletRequest request) {
         String token = request.getHeader("Authorization");
         Map<String, Object> parsed = JwtUtils.parseToken(token);
         Long userId = (Long) parsed.get("userId");
-        User cache = redisService.getUserInfoCache(userId);
+        UserDO cache = redisService.getUserInfoCache(userId);
         if (cache != null) {
             return cache;
         }
@@ -203,7 +209,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // todo 读数据库除了Redis异常，还有可能是账号异常
         log.info("账号存在异常,请尽快修改密码");
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        return userMapper.selectById(queryWrapper);
+        User user = userMapper.selectById(queryWrapper);
+        return UserConverter.convertToUserDO(user);
     }
 
     /**
@@ -218,7 +225,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             String token = request.getHeader("Authorization");
             Map<String, Object> parsed = JwtUtils.parseToken(token);
             Long userId = (Long) parsed.get("userId");
-            User cache = redisService.getUserInfoCache(userId);
+            UserDO cache = redisService.getUserInfoCache(userId);
             return cache.getUserRole() == ADMIN_ROLE;
         } catch (Exception e) {
             throw new BusinessException(StateCode.NOT_FOUND_ERROR, "Redis或账号异常");
@@ -226,7 +233,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public boolean isAdmin(User loginUser) {
+    public boolean isAdmin(UserDO loginUser) {
         if (loginUser == null) {
             return false;
         }
@@ -243,7 +250,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     @Override
     public boolean updateUser(UpdateUserRequest updateUserRequest, HttpServletRequest request) {
         long userId = updateUserRequest.getId();
-        User loginUser = this.getLoggingUser(request);
+        UserDO loginUser = this.getLoggingUser(request);
+        System.out.println(updateUserRequest);
+        System.out.println(loginUser);
         if (userId <= 0) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
@@ -256,16 +265,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (oldUser == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "参数为空");
         }
-        //如果更新密码,非管理员需要校验两次密码是否相等
-        String newPassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getUserPassword()).getBytes());
-        String surePassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getSurePassword()).getBytes());
-        if (!oldUser.getUserPassword().equals(newPassword) && !isAdmin(loginUser) && !newPassword.equals(surePassword)) {
-            throw new BusinessException(StateCode.OPERATION_ERROR, "修改的两次密码不一致");
-        }
-        if (!oldUser.getUserPassword().equals(newPassword)) {
-            redisService.removeToken(userId);
-        }
-        updateUserRequest.setUserPassword(newPassword);
         User user = new User();
         BeanUtils.copyProperties(updateUserRequest, user);
         //0为男，1为女
@@ -283,11 +282,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(StateCode.PARAMS_ERROR, "手机号格式错误");
         }
         String Email = user.getEmail();
-        if (StringUtils.isNotBlank(Email) && !Validator.isMobile(Email)) {
+        if (StringUtils.isNotBlank(Email) && !Validator.isEmail(Email)) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "邮箱号格式错误");
         }
         //过滤普通用户不能更改的字段
         if (!isAdmin(loginUser)) {
+            user.setUserAccount(user.getUserAccount());
             user.setUserStatus(0);
             user.setUserRole(0);
             user.setIsDelete(0);
@@ -297,7 +297,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return false;
         }
         //更新缓存信息
-        redisService.UserInfoCache(userId, user);
+        UserDO userDO = UserConverter.convertToUserDO(user);
+        redisService.UserInfoCache(userId, userDO);
 
         return true;
     }
@@ -310,23 +311,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 查询到的用户信息对象
      */
     @Override
-    public User getUserInfoById(Long queryById, User loggingUser) {
-        User userInfoCache = redisService.getUserInfoCache(queryById);
+    public UserDO getUserInfoById(Long queryById, UserDO loggingUser) {
+        UserDO userInfoCache = redisService.getUserInfoCache(queryById);
         if (ObjectUtils.isNotEmpty(userInfoCache)) {
             return handleUserInfoBasedOnRole(loggingUser, userInfoCache);
         }
         // 无缓存，读MySQL数据库
         User user = userMapper.selectById(queryById);
+        UserDO userDO = UserConverter.convertToUserDO(user);
         if (ObjectUtils.isNotEmpty(user)) {
             // 缓存写入（这里添加合适的异常处理逻辑会更好，比如写入失败的情况等）
             try {
-                redisService.UserInfoCache(queryById, user);
+                redisService.UserInfoCache(queryById, userDO);
             } catch (Exception e) {
                 throw new BusinessException(StateCode.NOT_FOUND_ERROR, "返回用户为空");
             }
-            return handleUserInfoBasedOnRole(loggingUser, user);
+            return handleUserInfoBasedOnRole(loggingUser, userDO);
         }
-        return user;
+        return userDO;
     }
 
     /**
@@ -337,7 +339,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return List<User>
      */
     @Override
-    public List<UserVO> searchUsers(String userAccount, String userName, User loggingUser) {
+    public List<UserVO> searchUsers(String userAccount, String userName, UserDO loggingUser) {
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 
         // 处理 userAccount 精确搜索
@@ -349,7 +351,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             queryWrapper.like("username", userName);
             queryWrapper.last("LIMIT 100"); // 限制返回结果数量
         } else {
-            throw new BusinessException(StateCode.PARAMS_ERROR,"请输入参数");
+            throw new BusinessException(StateCode.PARAMS_ERROR, "请输入参数");
         }
 
         // 执行查询
@@ -383,27 +385,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * 根据登录用户角色处理用户信息返回
      *
      * @param loggingUser 当前登录用户
-     * @param user        要处理的用户信息对象（可能来自缓存或者数据库查询）
+     * @param userDO      要处理的用户信息对象（可能来自缓存或者数据库查询）
      * @return 最终要返回的符合业务逻辑的用户信息对象
      */
-    private User handleUserInfoBasedOnRole(User loggingUser, User user) {
+    private UserDO handleUserInfoBasedOnRole(UserDO loggingUser, UserDO userDO) {
         if (isAdmin(loggingUser)) {
-            return user;
+            return userDO;
         }
 
         UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
+        BeanUtils.copyProperties(userDO, userVO);
 
-        User resultUser = new User();
+        UserDO resultUser = new UserDO();
         BeanUtils.copyProperties(userVO, resultUser);
 
         return resultUser;
     }
 
 
-
 }
 
 
 
+
+/**
+        //如果更新密码,非管理员需要校验两次密码是否相等
+        String newPassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getUserPassword()).getBytes());
+        String surePassword = DigestUtils.md5DigestAsHex((SALT + updateUserRequest.getSurePassword()).getBytes());
+        if (!oldUser.getUserPassword().equals(newPassword) && !isAdmin(loginUser) && !newPassword.equals(surePassword)) {
+            throw new BusinessException(StateCode.OPERATION_ERROR, "修改的两次密码不一致");
+        }
+        if (!oldUser.getUserPassword().equals(newPassword)) {
+            redisService.removeToken(userId);
+            redisService.removeUserInfoCache(userId);
+        }
+        updateUserRequest.setUserPassword(newPassword);
+*/
 

@@ -1,30 +1,24 @@
-package com.iusie.campuscircle.model.entity;
+package com.iusie.campuscircle.model.dto;
 
-import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-import lombok.Data;
-
-
 /**
- * 用户持久化数据实体
- *
- * @TableName user
  * @author iusie
- * @date 2024/11/15
+ * @description
+ * @date 2024/12/2
  */
-@TableName(value ="user")
+
 @Data
-public class User implements Serializable {
+public class UserDO implements Serializable {
+
     /**
      * 用户id
      */
-    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
@@ -70,7 +64,7 @@ public class User implements Serializable {
     /**
      * 标签 json 列表
      */
-    private String tags;
+    private List<String> tags;
 
     /**
      * 用户角色 0 - 普通用户 1 - 管理员
@@ -95,12 +89,9 @@ public class User implements Serializable {
     /**
      * 是否删除
      */
-    @TableLogic
     private Integer isDelete;
 
     @Serial
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 7109811221470205966L;
 
 }

@@ -1,5 +1,6 @@
 package com.iusie.campuscircle.service;
 
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.Team;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.iusie.campuscircle.model.entity.User;
@@ -20,7 +21,7 @@ public interface TeamService extends IService<Team> {
      * @param loginUser 创建人信息
      * @return
      */
-    long createTeam(Team team, User loginUser);
+    long createTeam(Team team, UserDO loginUser);
 
     /**
      * 解散队伍
@@ -29,7 +30,7 @@ public interface TeamService extends IService<Team> {
      * @param loginUser 解散者信息
      * @return
      */
-    boolean deleteTeam(long teamId, User loginUser);
+    boolean deleteTeam(long teamId, UserDO loginUser);
 
     /**
      * 根据队伍的id解散队伍,移除队伍相关信息
@@ -46,7 +47,7 @@ public interface TeamService extends IService<Team> {
      * @param loginUser
      * @return
      */
-    boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser);
+    boolean updateTeam(TeamUpdateRequest teamUpdateRequest, UserDO loginUser);
 
     /**
      * 根据队伍Id查询队伍信息

@@ -1,6 +1,7 @@
 package com.iusie.campuscircle.aop;
 
 import com.iusie.campuscircle.annotation.OperationLogger;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.service.UserService;
 import jakarta.annotation.Resource;
@@ -52,7 +53,7 @@ public class LogInterceptor {
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest httpServletRequest = ((ServletRequestAttributes) requestAttributes).getRequest();
         //用户id
-        User user = userService.getLoggingUser(httpServletRequest);
+        UserDO user = userService.getLoggingUser(httpServletRequest);
         String userAccount = user.getUserAccount();
         int userRole = user.getUserRole();
         String role = userRole(userRole);

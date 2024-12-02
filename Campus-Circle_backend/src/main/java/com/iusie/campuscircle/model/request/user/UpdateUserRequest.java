@@ -27,15 +27,6 @@ public class UpdateUserRequest  implements Serializable {
      */
     private String userAccount;
 
-    /**
-     * 密码
-     */
-    private String userPassword;
-
-    /**
-     * 确认密码
-     */
-    private String surePassword;
 
     /**
      * 用户昵称

@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.iusie.campuscircle.annotation.OperationLogger;
 import com.iusie.campuscircle.common.*;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.request.user.UpdateUserRequest;
 import com.iusie.campuscircle.model.request.user.UserLoginRequest;
 import com.iusie.campuscircle.model.request.user.UserRegisterRequest;
+import com.iusie.campuscircle.model.vo.LoginResponse;
 import com.iusie.campuscircle.model.vo.UserVO;
 import com.iusie.campuscircle.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +49,7 @@ public class UserController {
 
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public BaseResponse<UserVO> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletResponse response) {
+    public BaseResponse<LoginResponse> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletResponse response) {
         if (userLoginRequest == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "请求头为空");
         }
@@ -56,7 +58,7 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "账号或密码为空");
         }
-        UserVO result = userService.userLogin(userAccount, userPassword, response);
+        LoginResponse result = userService.userLogin(userAccount, userPassword, response);
         return ResultUtils.success(result);
     }
 
@@ -85,14 +87,13 @@ public class UserController {
     @Operation(summary = "获取单个用户信息")
     @OperationLogger("获取单个用户信息")
     @GetMapping("/getUserInfo")
-    public BaseResponse<User> getUserInfo(@RequestParam Long id, HttpServletRequest request)
-    {
-        if (id == null)
-        {
+    public BaseResponse<UserDO> getUserInfo(@RequestParam Long id, HttpServletRequest request) {
+        if (id == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        User loggingUser = userService.getLoggingUser(request);
-        User result = userService.getUserInfoById(id,loggingUser);
+        UserDO loggingUser = userService.getLoggingUser(request);
+        UserDO result = userService.getUserInfoById(id, loggingUser);
+        result.setUserPassword(null);
         return ResultUtils.success(result);
     }
 
@@ -100,29 +101,25 @@ public class UserController {
     @Operation(summary = "查询用户")
     @OperationLogger("查询用户")
     @GetMapping("/searchUsers")
-    public BaseResponse<List<UserVO>> searchUsers(String userAccount , String userName, HttpServletRequest request)
-    {
-        if (userAccount == null && userName == null)
-        {
+    public BaseResponse<List<UserVO>> searchUsers(String userAccount, String userName, HttpServletRequest request) {
+        if (userAccount == null && userName == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        User loggingUser = userService.getLoggingUser(request);
-        List<UserVO> userList = userService.searchUsers(userAccount,userName,loggingUser);
+        UserDO loggingUser = userService.getLoggingUser(request);
+        List<UserVO> userList = userService.searchUsers(userAccount, userName, loggingUser);
         return ResultUtils.success(userList);
     }
 
     @Operation(summary = "用户列表(管理员)")
     @OperationLogger("查询用户列表")
     @PostMapping("/usersList")
-    public BaseResponse<Page<User>> usersList(@RequestBody PageRequest pageRequest, HttpServletRequest request)
-    {
+    public BaseResponse<Page<User>> usersList(@RequestBody PageRequest pageRequest, HttpServletRequest request) {
         long current = pageRequest.getCurrent();
         long size = pageRequest.getPageSize();
-        if (!userService.isAdmin(request))
-        {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(StateCode.NO_AUTH_ERROR);
         }
-        Page<User> userPage = userService.page(new Page<>(current, size),userService.getQueryWrapper());
+        Page<User> userPage = userService.page(new Page<>(current, size), userService.getQueryWrapper());
         return ResultUtils.success(userPage);
     }
 
@@ -133,8 +130,7 @@ public class UserController {
         if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        if (!userService.isAdmin(request))
-        {
+        if (!userService.isAdmin(request)) {
             throw new BusinessException(StateCode.NO_AUTH_ERROR);
         }
         boolean delete = userService.removeById(deleteRequest.getId());

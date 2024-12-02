@@ -6,6 +6,7 @@ import com.iusie.campuscircle.common.DeleteRequest;
 import com.iusie.campuscircle.common.ResultUtils;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.Team;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.request.team.TeamAddRequest;
@@ -47,7 +48,7 @@ public class TeamController {
         if (teamAddRequest == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoggingUser(request);
+        UserDO loginUser = userService.getLoggingUser(request);
         Team team = new Team();
         BeanUtils.copyProperties(teamAddRequest, team);
         long teamId = teamService.createTeam(team, loginUser);
@@ -65,7 +66,7 @@ public class TeamController {
         if (teamId <= 0) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoggingUser(httpServletRequest);
+        UserDO loginUser = userService.getLoggingUser(httpServletRequest);
         boolean result = teamService.deleteTeam(teamId, loginUser);
         if (!result) {
             throw new BusinessException(StateCode.SYSTEM_ERROR, "删除失败");
@@ -88,7 +89,7 @@ public class TeamController {
         if (teamUpdateRequest == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
         }
-        User loginUser = userService.getLoggingUser(httpServletRequest);
+        UserDO loginUser = userService.getLoggingUser(httpServletRequest);
         boolean result = teamService.updateTeam(teamUpdateRequest, loginUser);
         if (!result) {
             throw new BusinessException(StateCode.SYSTEM_ERROR, "数据更新失败");

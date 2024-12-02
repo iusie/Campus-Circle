@@ -1,5 +1,7 @@
 import axios from '../index'
 import type { AxiosResponse } from 'axios'
+import { useUserStore } from '@/stores/counter'
+
 export function userRegister(userAccount: string, userPassword: string, checkPassword: string, email: string) {
   return axios({
     url: '/user/register', // 假设注册接口是这个路径
@@ -33,18 +35,43 @@ export function userLogin(userAccount: string, userPassword: string): Promise<Ax
     return response; // 返回响应数据以便后续处理
   })
 }
-
-//获取个人信息
-/*export function getUserInfo() {
+export function getUserInfo(id: string) {
+  const token = useUserStore().CacheToken;
   return axios({
-    url: '/user/current',
-    method: 'GET'
+    url: '/user/getUserInfo',
+    method: 'GET',
+    params: {
+      id
+    },
+    headers: {
+      Authorization: `${token}`, // 设置 Authorization 头
+      'Content-Type': 'application/json'
+    }
   }).then((response) => {
-    console.log('获取个人信息', response)
-    return response?.data // 返回响应数据以便后续处理
-  })
+    return response; // 返回响应数据以便后续处理
+  });
 }
 
+export function updateUserInfo(id: string, userData: any) {
+  const token = useUserStore().CacheToken;
+  return axios({
+    url: '/user/update',
+    method: 'PUT',
+    data: {
+      id,
+      ...userData // 展开 userData 以传递动态字段
+    },
+    headers: {
+      Authorization: `${token}`, // 设置 Authorization 头
+      'Content-Type': 'application/json'
+    }
+  }).then((response) => {
+    return response; // 返回响应数据以便后续处理
+  });
+}
+
+
+/*
 // 获取用户信息
 export function getAbout(tags: any) {
   return axios({

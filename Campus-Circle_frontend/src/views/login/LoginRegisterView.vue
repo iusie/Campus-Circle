@@ -137,7 +137,7 @@ const handleLogin = async () => {
     const response = await userLogin(userAccount, userPassword)
     if (response?.data?.code === 200) {
       console.log('登录成功:', response?.data)
-      userStore.setUser(response?.data.data.id, response?.data.data.userRole)
+      userStore.setUser(response?.data.data.id, response?.data.data.userRole, response?.data.data.token)
       // 登录成功后，判断是否勾选了记住密码
       if (rememberMe.value) {
         // 记住密码，保存账号和密码

@@ -3,15 +3,13 @@ import axios from 'axios'
 //const isDev = process.env.NODE_ENV === 'development';
 
 const instance = axios.create({
-  baseURL:  'http://localhost:8080/api'
+  baseURL:  'http://localhost:8080/api',
 })
 
 instance.defaults.withCredentials = true
-
 instance.interceptors.request.use(
   (config) => {
     // 在发送请求之前做些什么
-    console.log('发送的请求:' + config)
     return config
   },
   function(error) {
@@ -30,7 +28,6 @@ instance.interceptors.response.use(
         const redirectUrl = window.location.href;
         window.location.href = `/user/login?redirect=${redirectUrl}`;
     }*/
-
     console.log('进入网页响应的数据:' + response.data.code)
     return response;
   },

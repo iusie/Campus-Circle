@@ -6,6 +6,7 @@ import com.iusie.campuscircle.common.BaseResponse;
 import com.iusie.campuscircle.common.ResultUtils;
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.Team;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.entity.UserTeam;
@@ -54,7 +55,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @return
      */
     @Override
-    public long createTeam(Team team, User loginUser) {
+    public long createTeam(Team team, UserDO loginUser) {
         //请求参数是否为空
         if (team == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR);
@@ -131,7 +132,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @return
      */
     @Override
-    public boolean deleteTeam(long teamId, User loginUser) {
+    public boolean deleteTeam(long teamId, UserDO loginUser) {
         Team team = getTeamById(teamId);
         //是否为队长
         long userId = loginUser.getId();
@@ -179,7 +180,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
      * @return
      */
     @Override
-    public boolean updateTeam(TeamUpdateRequest teamUpdateRequest, User loginUser) {
+    public boolean updateTeam(TeamUpdateRequest teamUpdateRequest, UserDO loginUser) {
         if (teamUpdateRequest == null) {
             throw new BusinessException(StateCode.PARAMS_ERROR, "更新数据不能为空");
         }
