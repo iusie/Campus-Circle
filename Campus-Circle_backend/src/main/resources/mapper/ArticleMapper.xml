@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.iusie.campuscircle.mapper.ArticleMapper">
+
+    <resultMap id="BaseResultMap" type="com.iusie.campuscircle.model.entity.Article">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="headline" column="headline" jdbcType="VARCHAR"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="summarized" column="summarized" jdbcType="VARCHAR"/>
+            <result property="coverUrl" column="coverUrl" jdbcType="VARCHAR"/>
+            <result property="articleState" column="articleState" jdbcType="INTEGER"/>
+            <result property="articleTags" column="articleTags" jdbcType="VARCHAR"/>
+            <result property="thumbNum" column="thumbNum" jdbcType="INTEGER"/>
+            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,userId,headline,content,
+        summarized,coverUrl,articleState,
+        articleTags,thumbNum,createTime,
+        updateTime,isDelete
+    </sql>
+</mapper>

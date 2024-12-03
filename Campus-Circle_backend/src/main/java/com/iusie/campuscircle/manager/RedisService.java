@@ -2,10 +2,10 @@ package com.iusie.campuscircle.manager;
 
 import com.iusie.campuscircle.common.StateCode;
 import com.iusie.campuscircle.exception.BusinessException;
+import com.iusie.campuscircle.model.dto.ArticleDO;
 import com.iusie.campuscircle.model.dto.UserDO;
-import com.iusie.campuscircle.model.entity.User;
+import com.iusie.campuscircle.model.vo.ArticleCommentVO;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -80,4 +80,43 @@ public class RedisService {
         operations.delete(userCacheKey, userKey);
     }
 
+    // 文章缓存
+    public void ArticleCache(Long articleId, ArticleDO articleDO) {
+        String articleCacheKey = "ArticleCache:";
+        String articleKey = "ArticleId:" + articleId;
+        HashOperations<String, String, Object> operations = redisService.opsForHash();
+        operations.put(articleCacheKey, articleKey, articleDO);
+        redisService.expire(articleCacheKey, EXPIRE_TIME, TimeUnit.SECONDS);
+    }
+
+    // 得到文章缓存信息
+    public ArticleDO getArticleCache(Long articleId) {
+        String articleCacheKey = "ArticleCache:";
+        String articleKey = "ArticleId:" + articleId;
+        HashOperations<String, String, Object> operations = redisService.opsForHash();
+        ArticleDO articleDO = (ArticleDO) operations.get(articleCacheKey, articleKey);
+        if (articleId == null) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "用户缓存异常");
+        }
+        return articleDO;
+    }
+
+    // 删除文章缓存信息
+    public void removeArticleCache(Long articleId) {
+        String articleCacheKey = "ArticleCache:";
+        String articleKey = "ArticleId:" + articleId;
+        HashOperations<String, String, Object> operations = redisService.opsForHash();
+        if (articleId == null) {
+            throw new BusinessException(StateCode.PARAMS_ERROR, "用户Id不存在");
+        }
+        // 从 Redis 删除 UserVO
+        operations.delete(articleCacheKey, articleKey);
+    }
+
+    public List<ArticleCommentVO> getArticleCommentCache(Long id) {
+        return null;
+    }
+
+    public void articleCommentVOList(long id, List<ArticleCommentVO> articleCommentVOList) {
+    }
 }

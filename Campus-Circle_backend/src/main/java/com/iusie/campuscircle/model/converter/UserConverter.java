@@ -35,7 +35,6 @@ public class UserConverter {
 
         // 将 tags 字段从 JSON 字符串转换为 List<String>
         if (user.getTags() != null) {
-            System.out.println(user.getTags());
             List<String> tagsList = JSONUtil.toList(user.getTags(), String.class);
             userDO.setTags(tagsList);
         }
