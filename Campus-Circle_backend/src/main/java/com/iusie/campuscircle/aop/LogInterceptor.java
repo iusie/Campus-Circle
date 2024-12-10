@@ -2,7 +2,6 @@ package com.iusie.campuscircle.aop;
 
 import com.iusie.campuscircle.annotation.OperationLogger;
 import com.iusie.campuscircle.model.dto.UserDO;
-import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

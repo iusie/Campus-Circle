@@ -91,7 +91,6 @@ import { useUserStore } from '@/stores/counter';
 import { getUserInfo, updateUserInfo } from '@/service/axios/user';
 import type { UserLoginRes } from '@/model/UserVO';
 import { onMounted, ref, computed } from 'vue';
-import { ElMessage } from 'element-plus';
 
 const userStore = useUserStore();
 const userId = userStore.userId;
@@ -246,8 +245,6 @@ const updateUser = async () => {
   }
 };
 </script>
-
-
 
 <style scoped>
 .username-container {

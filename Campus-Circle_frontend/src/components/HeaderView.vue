@@ -2,13 +2,13 @@
   <div class="common-layout-header">
     <el-header id="header">
       <div class="logo">
-        <router-link to="/">
+        <router-link to="/home">
           <img src="@/assets/svg/amiya.ico" alt="Logo" />
         </router-link>
       </div>
 
       <nav class="nav-links">
-        <router-link to="/" class="nav-item">主页</router-link>
+        <router-link to="/home" class="nav-item">主页</router-link>
         <router-link to="/articles" class="nav-item">文章</router-link>
         <router-link to="/team" class="nav-item">组队大厅</router-link>
         <router-link to="/chat" class="nav-item">聊天</router-link>
@@ -29,16 +29,19 @@
             </template>
           </el-input>
         </div>
-
-        <el-button size="small" type="primary" round>
-          <img src="@/assets/svg/edit.svg" alt="Edit" />写文章
-        </el-button>
-        <el-button size="small" type="primary" round>
-          <img src="@/assets/svg/info.svg" alt="info" />消息
-        </el-button>
-
+        <router-link to="/write">
+          <el-button size="small" type="primary" round>
+            <img src="@/assets/svg/edit.svg" alt="Edit" />写文章
+          </el-button>
+        </router-link>
+        <router-link to="/write">
+          <el-button size="small" type="primary" round>
+            <img src="@/assets/svg/info.svg" alt="info" />消息
+          </el-button>
+        </router-link>
         <el-dropdown class="avatar" @command="handleDropdownCommand">
-          <el-avatar :src="user?.avatarUrl || 'https://jsd.onmicrosoft.cn/gh/iusie/image/user.svg'" @click="handleAvatarClick" />
+          <el-avatar :src="user?.avatarUrl || 'https://jsd.onmicrosoft.cn/gh/iusie/image/user.svg'"
+                     @click="handleAvatarClick" />
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="userInfo">个人中心</el-dropdown-item>
@@ -59,80 +62,83 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router';
-import { useUserStore } from '@/stores/counter';
-import LoginRegisterComponent from '@/components/LoginRegisterComponent.vue';
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/counter'
+import LoginRegisterComponent from '@/components/LoginRegisterComponent.vue'
 import { getUserInfo } from '@/service/axios/user'
-import type { UserLoginRes } from '@/model/UserVO' // 替换为你的组件路径
+import type { UserLoginRes } from '@/model/UserVO'
 
-const router = useRouter();
-const userStore = useUserStore();
-const search = ref('');
-const showLoginRegister = ref(false);
+const router = useRouter()
+const userStore = useUserStore()
+const search = ref('')
+const showLoginRegister = ref(false)
 
 // 使用计算属性来获取最新的 loginUserId
-const loginUerId = computed(() => userStore.userId);
+const loginUerId = computed(() => userStore.userId)
 
 const handleAvatarClick = () => {
   if (!loginUerId.value) {
-    showLoginRegister.value = true; // 显示登录注册组件
+    showLoginRegister.value = true // 显示登录注册组件
   } else {
-    router.push('/BaseInfoView');
+    router.push('/BaseInfoView')
   }
-};
+}
 
-const userId = userStore.userId;
+const userId = userStore.userId
 const user = ref<UserLoginRes | null>(null)
 
 onMounted(async () => {
-  if (userId === null) {
-    console.error('用户ID为空，无法获取用户信息');
-    return;
-  }
-
   try {
-    const response = await getUserInfo(userId.toString());
-    user.value = response?.data?.data;
+    if (userId !== null) {
+      const response = await getUserInfo(userId.toString())
+      user.value = response?.data?.data
+    } else {
+      console.log('userId is null, cannot fetch user info.')
+    }
   } catch (error) {
-    console.error('获取用户信息失败:', error);
+    console.error('获取用户信息失败:', error)
   }
-});
-
+  if (user.value?.avatarUrl === undefined) {
+    console.log('userId:' + userId, 'user.avatarUrl:' + user.value?.avatarUrl)
+    userStore.clearUser()
+    return
+  }
+})
 
 
 const handleDropdownCommand = (command: string) => {
   if (!loginUerId.value) {
-    showLoginRegister.value = true; // 显示登录注册组件
-    return;
+    showLoginRegister.value = true // 显示登录注册组件
+    return
   }
 
   switch (command) {
     case 'userInfo':
-      router.push('/userInfo/personInfo');
-      break;
+      router.push('/userInfo/personInfo')
+      break
     case 'articleManager':
-      router.push('/articleManager');
-      break;
+      router.push('/articleManager')
+      break
     case 'teamManager':
-      router.push('/teamManager');
-      break;
+      router.push('/teamManager')
+      break
     case 'setUp':
-      router.push('/setUp');
-      break;
+      router.push('/setUp')
+      break
     case 'logout':
-      userStore.clearUser();
+      userStore.clearUser()
       if (router.currentRoute.value.path === '/') {
-        window.location.reload(); // 刷新页面
+        window.location.reload() // 刷新页面
       } else {
-        router.push('/');
+        router.push('/')
       }
-      break;
+      break
   }
-};
+}
 
 const closeLoginRegister = () => {
-  showLoginRegister.value = false;
-};
+  showLoginRegister.value = false
+}
 </script>
 
 <style scoped>

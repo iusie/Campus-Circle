@@ -1,6 +1,5 @@
 <template>
   <div>
-    <HeaderView />
     <!-- 用户信息区域 -->
     <div class="user-info">
       <!-- 左侧菜单区域 -->
@@ -33,7 +32,6 @@
 </template>
 
 <script setup lang="ts">
-import HeaderView from '@/components/HeaderView.vue'
 import { onMounted, ref } from 'vue'
 import { getUserInfo } from '@/service/axios/user'
 import type { UserLoginRes } from '@/model/UserVO'
