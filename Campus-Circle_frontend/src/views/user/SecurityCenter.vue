@@ -51,19 +51,19 @@ onMounted(async () => {
 });
 
 // 格式化值
-const formatValue = (key) => {
+const formatValue = (key : any) => {
   if (!user.value) return '';
 
   switch (key) {
     case 'phone':
       return formatPhone(user.value.phone);
     default:
-      return user.value[key];
+      return user.value;
   }
 };
 
 // 格式化手机号
-const formatPhone = (phone) => {
+const formatPhone = (phone : any) => {
   if (!phone || phone.length < 7) return phone; // 确保手机号有效
   return `${phone.slice(0, 3)}****${phone.slice(-4)}`; // 只显示前三位和后四位
 };

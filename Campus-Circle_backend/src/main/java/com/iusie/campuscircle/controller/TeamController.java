@@ -10,6 +10,7 @@ import com.iusie.campuscircle.model.dto.UserDO;
 import com.iusie.campuscircle.model.entity.Team;
 import com.iusie.campuscircle.model.entity.User;
 import com.iusie.campuscircle.model.request.team.TeamAddRequest;
+import com.iusie.campuscircle.model.request.team.TeamJoinRequest;
 import com.iusie.campuscircle.model.request.team.TeamUpdateRequest;
 import com.iusie.campuscircle.model.vo.TeamVO;
 import com.iusie.campuscircle.service.TeamService;
@@ -22,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author iusie
@@ -97,6 +100,7 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
+
     /**
      * 查询队伍
      *
@@ -117,5 +121,42 @@ public class TeamController {
         return ResultUtils.success(team);
     }
 
+
+    /**
+     * 查询队伍
+     *
+     * @param teamType
+     * @return
+     */
+    @OperationLogger("通过类型查询队伍")
+    @Operation(summary = "通过类型查询队伍")
+    @GetMapping("/getTypeTeam")
+    public BaseResponse<List<TeamVO>> getTeamByType(@RequestParam(required = false) Integer teamType) {
+        List<TeamVO> teamVOList = teamService.getTeamInfoByType(teamType);
+        if (teamVOList == null) {
+            throw new BusinessException(StateCode.SYSTEM_ERROR, "查询队伍失败");
+        }
+        return ResultUtils.success(teamVOList);
+    }
+
+
+    /**
+     * 加入队伍
+     *
+     * @param teamJoinRequest
+     * @param request
+     * @return
+     */
+    @OperationLogger("用户加入队伍")
+    @Operation(summary = "用户加入队伍")
+    @PostMapping("/join")
+    public BaseResponse<Boolean> joinTeam(@RequestBody TeamJoinRequest teamJoinRequest, HttpServletRequest request) {
+        if (teamJoinRequest == null) {
+            throw new BusinessException(StateCode.PARAMS_ERROR);
+        }
+        UserDO loginUser = userService.getLoggingUser(request);
+        boolean result = teamService.joinTeam(teamJoinRequest, loginUser);
+        return ResultUtils.success(result);
+    }
 
 }

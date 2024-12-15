@@ -1,4 +1,5 @@
 # 数据库初始化
+drop schema if exists campus;
 
 # 创建库
 create database if not exists campus;
@@ -14,7 +15,7 @@ create table user
 (
     id           bigint auto_increment comment '用户id'
         primary key,
-    userAccount  varchar(256)                       null comment '用户账号',
+    userAccount  varchar(256)                       not null comment '用户账号',
     userPassword varchar(512)                       not null comment '密码',
     username     varchar(256)                       null comment '用户昵称',
     avatarUrl    varchar(1024)                      null comment '用户头像',
@@ -26,7 +27,7 @@ create table user
     userRole     int      default 0                 not null comment '用户角色 0 - 普通用户 1 - 管理员',
     userStatus   int      default 0                 not null comment '状态 0 - 正常',
     createTime   datetime default CURRENT_TIMESTAMP null comment '创建时间',
-    updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '创建时间',
+    updateTime   datetime default CURRENT_TIMESTAMP null on update CURRENT_TIMESTAMP comment '更新时间',
     isDelete     tinyint  default 0                 not null comment '是否删除'
 )
     comment '用户';
@@ -58,9 +59,11 @@ create table team
         primary key,
     userId       bigint                              not null comment '用户id',
     teamName     varchar(256)                        not null comment '队伍名称',
+    avatarTeam    varchar(1024)                      null comment '队伍头像',
     description  varchar(1024)                       null comment '队伍描述',
     maxNum       int       default 1                 not null comment '最大人数',
     teamPassword varchar(512)                        null comment '队伍密码',
+    teamType     int                                 not null comment '状态 1-竞赛 2-学习交流 2-休闲交友',
     teamState    int       default 0                 not null comment '状态 0-正常 1-私有  2-加密',
     expireTime   datetime                            null comment '过期时间',
     createTime   datetime  default CURRENT_TIMESTAMP null comment '创建时间',
@@ -135,11 +138,11 @@ DROP TABLE IF EXISTS `follow`;
 CREATE TABLE `follow`
 (
     `id`             bigint(20)          NOT NULL AUTO_INCREMENT COMMENT '主键',
-    `user_id`        bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
-    `follow_user_id` bigint(20) UNSIGNED NOT NULL COMMENT '关注的用户id',
-    `create_time`    timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time`    timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_delete`      tinyint(4)          NULL     DEFAULT 0 COMMENT '逻辑删除',
+    `userId`        bigint(20) UNSIGNED NOT NULL COMMENT '用户id',
+    `followUserId` bigint(20) UNSIGNED NOT NULL COMMENT '关注的用户id',
+    `createTime`    timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime`    timestamp           NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `isDelete`      tinyint(4)          NULL     DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (`id`) USING BTREE
 ) comment '用户关注' charset = utf8;
 
@@ -150,13 +153,13 @@ DROP TABLE IF EXISTS `friends`;
 CREATE TABLE `friends`
 (
     `id`          bigint(20)                                                    NOT NULL AUTO_INCREMENT COMMENT '好友申请id',
-    `from_id`     bigint(20)                                                    NOT NULL COMMENT '发送申请的用户id',
-    `receive_id`  bigint(20)                                                    NULL     DEFAULT NULL COMMENT '接收申请的用户id ',
-    `is_read`     tinyint(4)                                                    NOT NULL DEFAULT 0 COMMENT '是否已读(0-未读 1-已读)',
+    `fromId`     bigint(20)                                                    NOT NULL COMMENT '发送申请的用户id',
+    `receiveId`  bigint(20)                                                    NULL     DEFAULT NULL COMMENT '接收申请的用户id ',
+    `isRead`     tinyint(4)                                                    NOT NULL DEFAULT 0 COMMENT '是否已读(0-未读 1-已读)',
     `status`      tinyint(4)                                                    NOT NULL DEFAULT 0 COMMENT '申请状态 默认0 （0-未通过 1-已同意 2-已过期 3-不同意）',
-    `create_time` datetime                                                      NULL     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` datetime                                                      NULL     DEFAULT CURRENT_TIMESTAMP,
-    `is_delete`   tinyint(4)                                                    NOT NULL DEFAULT 0 COMMENT '是否删除',
+    `createTime`  datetime                                                      NULL     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime`  datetime                                                      NULL     DEFAULT CURRENT_TIMESTAMP,
+    `isDelete`    tinyint(4)                                                    NOT NULL DEFAULT 0 COMMENT '是否删除',
     `remark`      varchar(214)                                                  NULL     DEFAULT NULL COMMENT '好友申请备注信息',
     PRIMARY KEY (`id`) USING BTREE
 ) COMMENT = '好友申请管理表';
@@ -170,13 +173,13 @@ CREATE TABLE `message`
 (
     `id`          bigint(20)                                                    NOT NULL AUTO_INCREMENT COMMENT '主键',
     `type`        tinyint(4)                                                    NULL DEFAULT NULL COMMENT '类型-1 点赞',
-    `from_id`     bigint(20)                                                    NULL DEFAULT NULL COMMENT '消息发送的用户id',
-    `to_id`       bigint(20)                                                    NULL DEFAULT NULL COMMENT '消息接收的用户id',
+    `fromId`     bigint(20)                                                    NULL DEFAULT NULL COMMENT '消息发送的用户id',
+    `toId`       bigint(20)                                                    NULL DEFAULT NULL COMMENT '消息接收的用户id',
     `data`        varchar(255)                                                  NULL DEFAULT NULL COMMENT '消息内容',
-    `is_read`     tinyint(4)                                                    NULL DEFAULT 0 COMMENT '已读-0 未读 ,1 已读',
-    `create_time` datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `is_delete`   tinyint(4)                                                    NULL DEFAULT 0 COMMENT '逻辑删除',
+    `isRead`     tinyint(4)                                                    NULL DEFAULT 0 COMMENT '已读-0 未读 ,1 已读',
+    `createTime`  datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime`  datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `isDelete`    tinyint(4)                                                    NULL DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (`id`) USING BTREE
 ) comment '消息表' charset = utf8;
 
@@ -188,14 +191,14 @@ DROP TABLE IF EXISTS `chat`;
 CREATE TABLE `chat`
 (
     `id`          bigint(20) PRIMARY KEY                                        NOT NULL AUTO_INCREMENT COMMENT '聊天记录id',
-    `from_id`     bigint(20)                                                    NOT NULL COMMENT '发送消息的群/用户id',
-    `to_id`       bigint(20)                                                    NULL DEFAULT NULL COMMENT '接收消息的群/用户id',
+    `fromId`     bigint(20)                                                    NOT NULL COMMENT '发送消息的群/用户id',
+    `toId`       bigint(20)                                                    NULL DEFAULT NULL COMMENT '接收消息的群/用户id',
     `text`        varchar(512)                                                  NULL DEFAULT NULL,
-    `chat_type`   tinyint(4)                                                    NOT NULL COMMENT '聊天类型 1-私聊 2-群聊',
-    `is_read`     tinyint                                                            default 0 null comment '是否已读 1-已读 2-未读',
-    `create_time` datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    `update_time` datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    `team_id`     bigint(20)                                                    NULL DEFAULT NULL,
-    `is_delete`   tinyint(4)                                                    NULL DEFAULT 0
+    `chatType`   tinyint(4)                                                    NOT NULL COMMENT '聊天类型 1-私聊 2-群聊',
+    `isRead`     tinyint                                                            default 0 null comment '是否已读 1-已读 2-未读',
+    `createTime`  datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime`  datetime                                                      NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    `teamId`     bigint(20)                                                    NULL DEFAULT NULL,
+    `isDelete`   tinyint(4)                                                    NULL DEFAULT 0
 )
     COMMENT = '聊天消息表';

@@ -127,10 +127,10 @@ const handleDropdownCommand = (command: string) => {
       break
     case 'logout':
       userStore.clearUser()
-      if (router.currentRoute.value.path === '/') {
+      if (router.currentRoute.value.path === '/home') {
         window.location.reload() // 刷新页面
       } else {
-        router.push('/')
+        router.push('/home')
       }
       break
   }

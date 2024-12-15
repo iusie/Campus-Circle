@@ -1,112 +1,141 @@
 <template>
-  <div id="articles">
-    <div class="left-list">
-      <el-menu default-active="1" class="menu" vertical>
-        <el-menu-item index="1">
-          <router-link to="/userInfo/personInfo" class="nav-item">个人中心</router-link>
-        </el-menu-item>
-        <el-menu-item index="2">
-          <router-link to="/userInfo/securityCenter" class="nav-item">安全中心</router-link>
-        </el-menu-item>
-        <el-menu-item index="3">
-          <router-link to="#" class="nav-item">文章管理</router-link>
-        </el-menu-item>
-        <el-menu-item index="4">
-          <router-link to="#" class="nav-item">队伍管理</router-link>
-        </el-menu-item>
-        <el-menu-item index="5">
-          <router-link to="#" class="nav-item">设置</router-link>
-        </el-menu-item>
-      </el-menu>
-    </div>
-    <div class="article-list">
-      <el-tabs v-model="activeName" class="article-tabs" @tab-click="handleClick">
-      <el-tab-pane label="推荐" name="first"><ArticleComponent/></el-tab-pane>
-      <el-tab-pane label="最新" name="second">Config</el-tab-pane>
-    </el-tabs>
-    </div>
-    <div class="right-list">
-    <p>昨日排行榜</p>
-    </div>
+  <div id="articleComponent">
+    <ul v-infinite-scroll="load" class="infinite-list" style="overflow: auto">
+      <li v-for="article in articles" :key="article.id" class="infinite-list-item">
+        <img :src="article.image" alt="Blog Image" class="article-image" />
+        <div class="article-content">
+          <h3 class="article-title">{{ article.title }}</h3>
+          <p class="article-summary">{{ article.summary }}</p>
+          <div class="article-meta">
+            <span class="tags">{{ article.tags.join(', ') }}</span>
+            <span class="views">👁️ {{ article.views }}</span>
+            <span class="likes">❤️ {{ article.likes }}</span>
+            <span class="author">By {{ article.author }}</span>
+          </div>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { ref } from 'vue'
-import type { TabsPaneContext } from 'element-plus'
-import ArticleComponent from '@/views/article/ArticleComponent.vue'
-const activeName = ref('first')
 
-const handleClick = (tab: TabsPaneContext, event: Event) => {
-  console.log(tab, event)
+const articles = ref([
+  {
+    id: 1,
+    image: 'https://via.placeholder.com/150',
+    title: 'First Blog Post',
+    summary: 'This is a summary of the first blog post.',
+    tags: ['Vue', 'JavaScript'],
+    views: 120,
+    likes: 30,
+    author: 'Author One'
+  },
+  {
+    id: 2,
+    image: 'https://via.placeholder.com/150',
+    title: 'Second Blog Post',
+    summary: 'This is a summary of the second blog post.',
+    tags: ['CSS', 'Design'],
+    views: 95,
+    likes: 20,
+    author: 'Author Two'
+  }
+]);
+
+const load = () => {
+  // Load more articles logic
+  articles.value.push(...[
+    {
+      id: articles.value.length + 1,
+      image: 'https://via.placeholder.com/150',
+      title: 'New Blog Post',
+      summary: 'This is a summary of a new blog post.',
+      tags: ['New', 'Post'],
+      views: 50,
+      likes: 10,
+      author: 'Author Three'
+    }
+  ]);
 }
 </script>
 
-<style scoped>
-#articles {
-  display: flex; /* 使用 Flexbox  div左右分布 */
-  justify-content: center; /* 水平居中对齐 */
-  margin: 50px;
+<style>
+#articleComponent {
+  width: 100%;
 }
-.left-list {
+
+.el-scrollbar__wrap {
+  overflow: auto;
+  height: 100%;
+}
+
+.infinite-list {
+  height: 70vh;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+/* Customize Scrollbar */
+.infinite-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.infinite-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.infinite-list::-webkit-scrollbar-thumb {
+  background: rgba(60, 197, 255, 0.87);
+  border-radius: 10px;
+}
+
+.infinite-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(49, 164, 221, 0.7);
+}
+
+.infinite-list-item {
+  display: flex;
+  align-items: flex-start;
+  background: #f5f5f5;
+  margin: 10px;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.article-image {
   width: 150px;
-  height: 300px;
-  background-color: rgb(255, 248, 248); /* 背景颜色 */
-  border: 1px solid #eaeaea; /* 边框 */
-  margin-right: 10px;
-  padding: 0; /* 去掉内边距 */
-  display: flex; /* 使用 Flexbox */
-}
-.article-list {
-  width: 850px;
-  margin:0 50px 0 50px;
-  padding: 0 50px 30px 50px;
-  border-radius: 3px;
-  border: 1px solid #eaeaea; /* 边框 */
-}
-.right-list {
-  width: 150px;
-  height: 300px;
-  justify-content: center; /* 水平居中对齐 */
-  border: 1px solid #eaeaea; /* 边框 */
-  margin-right: 10px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 15px; /* Space between image and content */
 }
 
-
-.menu {
-  width: 100%; /* 改为100%以适应容器 */
+.article-content {
+  flex: 1;
 }
 
-.el-menu-item {
-  text-align: center;
-  width: 100%; /* 让菜单项占满宽度 */
-  list-style-type: none; /* 隐藏小圆点 */
-  padding: 0; /* 去掉内边距 */
+.article-title {
+  font-size: 1.2em;
+  margin: 0;
 }
 
-.el-menu-item .nav-item {
-  color: black; /* 字体颜色设置为黑色 */
-  text-decoration: none;
-  font-weight: 500; /* 字体加粗 */
-  transition: color 0.3s; /* 添加过渡效果 */
-  display: block; /* 使链接占据整个菜单项 */
-  padding: 10px; /* 内边距，增加可点击区域 */
+.article-summary {
+  margin: 5px 0;
 }
 
-/* 鼠标悬停时的背景颜色 */
-.el-menu-item:hover .nav-item {
-  color: black; /* 保持字体颜色为黑色 */
+.article-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.9em;
+  color: #666;
 }
 
-.el-menu-item:active .nav-item {
-  color: #3a8ee6; /* 点击效果 */
-}
-
-.article-tabs > .el-tabs__content {
-  padding: 32px;
-  color: #6b778c;
-  font-size: 32px;
-  font-weight: 600;
+.tags {
+  font-weight: bold;
 }
 </style>
-

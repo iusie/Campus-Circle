@@ -45,6 +45,11 @@ public class TeamVO implements Serializable {
     private Integer maxNum;
 
     /**
+     * 队伍类型 1-竞赛 2-学习交流 2-休闲交友
+     */
+    private Integer  teamType;
+
+    /**
      * 状态 0-正常 1-私有  2-加密
      */
     private Integer teamState;

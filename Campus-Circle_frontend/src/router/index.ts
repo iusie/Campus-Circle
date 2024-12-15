@@ -6,8 +6,9 @@ import SecurityCenter from '@/views/user/SecurityCenter.vue'
 import MainBodyView from '@/components/MainBodyView.vue'
 import BaseInfo from '@/views/base/IndexInfo.vue'
 import WriteArticles from '@/views/article/WriteArticles.vue'
-import Articles from '@/views/article/ArticleList.vue'
-import ArticleComponent from '@/views/article/ArticleComponent.vue'
+import Articles from '@/views/article/ArticleNav.vue'
+import ArticleComponent from '@/views/article/ArticleList.vue'
+import TeamList from '@/views/team/TeamNav.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,10 @@ const router = createRouter({
         {
           path: 'articles',
           component: Articles,
+        },
+        {
+          path: 'team',
+          component: TeamList,
         },
         {
           path: '/userInfo',
